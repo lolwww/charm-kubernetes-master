@@ -33,6 +33,7 @@ from subprocess import check_call
 from subprocess import check_output
 from subprocess import CalledProcessError
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
 import charms.coordinator
 from charms.layer import snap
@@ -1664,6 +1665,7 @@ def build_kubeconfig():
     if ca_exists and client_pass:
         # drop keystone helper script?
         ks = endpoint_from_flag('keystone-credentials.available.auth')
+        openstack = endpoint_from_flag('endpoint.openstack.ready')
         if ks:
             script_filename = 'kube-keystone.sh'
             keystone_path = os.path.join(os.sep, 'home', 'ubuntu',
@@ -1672,6 +1674,16 @@ def build_kubeconfig():
                        'address': ks.credentials_host(),
                        'port': ks.credentials_port(),
                        'version': ks.api_version()}
+            render(script_filename, keystone_path, context)
+        elif openstack:
+            auth_url_parsed = urlparse(openstack.auth_url)
+            script_filename = 'kube-keystone.sh'
+            keystone_path = os.path.join(os.sep, 'home', 'ubuntu',
+                                         script_filename)
+            context = {'protocol': auth_url_parsed.scheme,
+                       'address': auth_url_parsed.hostname,
+                       'port': auth_url_parsed.port,
+                       'version': openstack.version}
             render(script_filename, keystone_path, context)
         elif is_state('leadership.set.keystone-cdk-addons-configured'):
             # if addons are configured, we're going to do keystone
