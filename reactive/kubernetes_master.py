@@ -1701,7 +1701,7 @@ def build_kubeconfig():
         # Create the kubeconfig on this system so users can access the cluster.
         hookenv.log('Writing kubeconfig file.')
 
-        if ks:
+        if ks or openstack:
             create_kubeconfig(kubeconfig_path, public_server, ca_crt_path,
                               user='admin', password=client_pass,
                               keystone=True, aws_iam_cluster_id=cluster_id)
