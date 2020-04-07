@@ -701,6 +701,12 @@ def set_final_status():
         hookenv.status_set('blocked', msg)
         return
 
+    openstack = endpoint_from_flag('endpoint.openstack.ready')
+    if openstack and openstack.version == '2':
+        msg = 'Keystone auth v2 detected. v3 is required.'
+        hookenv.status_set('blocked', msg)
+        return
+
     aws_iam = endpoint_from_flag('endpoint.aws-iam.ready')
     if aws_iam and ks:
         msg = 'Keystone and AWS IAM detected. Must select only one.'
@@ -1859,18 +1865,21 @@ def configure_apiserver():
         admission_plugins.append('NodeRestriction')
 
     ks = endpoint_from_flag('keystone-credentials.available.auth')
+    openstack = endpoint_from_flag('endpoint.openstack.ready')
     aws = endpoint_from_flag('endpoint.aws-iam.ready')
 
     # only one webhook at a time currently:
     # see https://github.com/kubernetes/kubernetes/issues/65874
-    if ks and aws:
+
+    keystone = ks or openstack
+    if keystone and aws:
         hookenv.log('unable to have BOTH Keystone and '
                     'AWS IAM webhook auth at the same time!')
     elif aws:
         api_opts['authentication-token-webhook-config-file'] = aws_iam_webhook
-    elif ks:
+    elif keystone:
         ks_ip = None
-        if ks:
+        if keystone:
             ks_ip = get_service_ip('k8s-keystone-auth-service',
                                    errors_fatal=False)
         if ks and ks_ip:
