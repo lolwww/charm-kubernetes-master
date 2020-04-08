@@ -2523,12 +2523,9 @@ def keystone_kick_apiserver():
     clear_flag('kubernetes-master.apiserver.configured')
 
 
-@when('keystone-credentials.available.auth', 'certificates.ca.available',
-      'certificates.client.cert.available', 'authentication.setup',
-      'etcd.available', 'leadership.set.keystone-cdk-addons-configured')
-@when('endpoint.openstack.ready', 'certificates.ca.available',
-      'certificates.client.cert.available', 'authentication.setup',
-      'etcd.available', 'leadership.set.keystone-cdk-addons-configured')
+@when('certificates.ca.available', 'certificates.client.cert.available',
+      'authentication.setup', 'etcd.available', 'leadership.set.keystone-cdk-addons-configured')
+@when_any('keystone-credentials.available.auth', 'endpoint.openstack.ready')
 def keystone_config():
     # first, we have to have the service set up before we can render this stuff
     ks = endpoint_from_flag('keystone-credentials.available.auth')
