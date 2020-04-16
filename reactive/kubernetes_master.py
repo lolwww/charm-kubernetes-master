@@ -1298,7 +1298,7 @@ def configure_cdk_addons():
 
     set_state('cdk-addons.configured')
     leader_set({'kubernetes-master-addons-ca-in-use': True})
-    if ks:
+    if ks or openstack:
         leader_set({'keystone-cdk-addons-configured': True})
     else:
         leader_set({'keystone-cdk-addons-configured': None})
@@ -1896,7 +1896,7 @@ def configure_apiserver():
         if keystone:
             ks_ip = get_service_ip('k8s-keystone-auth-service',
                                    errors_fatal=False)
-        if ks and ks_ip:
+        if keystone and ks_ip:
             os.makedirs(keystone_root, exist_ok=True)
 
             keystone_webhook = keystone_root + '/webhook.yaml'
@@ -1914,7 +1914,7 @@ def configure_apiserver():
                 api_opts['authorization-webhook-config-file'] = keystone_webhook # noqa
             set_state('keystone.apiserver.configured')
         else:
-            if ks and not ks_ip:
+            if keystone and not ks_ip:
                 hookenv.log('Unable to find k8s-keystone-auth-service '
                             'service. Will retry')
                 # Note that we can get into a nasty state here
